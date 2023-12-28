@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4VwEe8gRXtBA5S41InNPPFGsh0LWdJ9lA6VXNVwv/GkS3TglvPkYX1WCHMVglgpLcQoemO2kgJ5ernAb3bP6Zg==",
+  "dgSpecHash": "GG8QWETfrZvtnkpoLc9hBms7ZetinEgjZclj+uXBKYhF8O51l7YfhEksNju7jpTnrQjb0OaYKNNWeg/MVeUYsg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\marti\\OneDrive\\Documents\\College\\Year 4\\Secure Software Development\\SSD-Assignment---Banking-Application\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
+  "projectFilePath": "E:\\College\\Year 4\\Secure Software Development\\Secure-Software-Development-Assignment\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\marti\\.nuget\\packages\\microsoft.data.sqlite\\7.0.0\\microsoft.data.sqlite.7.0.0.nupkg.sha512",
     "C:\\Users\\marti\\.nuget\\packages\\microsoft.data.sqlite.core\\7.0.0\\microsoft.data.sqlite.core.7.0.0.nupkg.sha512",

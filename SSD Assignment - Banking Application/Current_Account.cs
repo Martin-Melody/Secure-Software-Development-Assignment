@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SSD_Assignment___Banking_Application.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,39 +7,54 @@ using System.Threading.Tasks;
 
 namespace Banking_Application
 {
-    public class Current_Account: Bank_Account
+    public class Current_Account : Bank_Account
     {
 
-        public string overdraftAmount;
+        private String _overdraftAmount;
 
-        public Current_Account(): base()
+
+        public String OverdraftAmount
+        {
+            get { return _overdraftAmount; }
+            set { _overdraftAmount = value; }
+        }
+
+        public Current_Account() : base()
         {
 
         }
-        
+
         public Current_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, String balance, String overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
-            this.overdraftAmount = overdraftAmount;
+
+            this.OverdraftAmount = OverdraftAmount;
         }
 
-        public override bool withdraw(double amountToWithdraw)
+        public override bool Withdraw(double amountToWithdraw)
         {
-            double avFunds = getAvailableFunds();
+            //string avFunds = GetBalance();
 
-            if (avFunds >= amountToWithdraw)
-            {
-                balance -= amountToWithdraw;
-                return true;
-            }
+            //if (avFunds >= amountToWithdraw)
+            //{
+            //    UpdateBalance(Balance - amountToWithdraw); // Use the protected method
+            //    return true;
+            //}
+            //else
+            //{
+            //    return false;
+            //}
 
-            else
-                return false;
-
+            return true;
         }
 
-        public override double getAvailableFunds()
+        public override double GetAvailableFunds()
         {
-            return (double.TryParse(base.balance, out double result) + overdraftAmount);
+
+            double.TryParse(OverdraftAmount, out double overdraftAmount);
+            double.TryParse(Balance, out double balance);
+
+
+            return balance + overdraftAmount;
         }
 
         public override String ToString()
@@ -46,7 +62,7 @@ namespace Banking_Application
 
             return base.ToString() +
                 "Account Type: Current Account\n" +
-                "Overdraft Amount: " + overdraftAmount + "\n";
+                "Overdraft Amount: " + OverdraftAmount + "\n";
 
         }
 

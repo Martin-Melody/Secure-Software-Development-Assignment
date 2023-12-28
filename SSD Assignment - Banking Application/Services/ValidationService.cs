@@ -9,8 +9,17 @@ namespace SSD_Assignment___Banking_Application.Services
 {
     public class ValidationService
     {
+
+        // Maybe move these to bank_account
+        private const double MinOverdraftAmount = 0.0;
+        private const double MaxOverdraftAmount = 10000.0;
+
+        private const double MinInterestRate = 0.0;
+        private const double MaxInterestRate = 10.0;
+
         public string GetValidInput(string prompt)
         {
+
             string input;
             do
             {
@@ -52,11 +61,71 @@ namespace SSD_Assignment___Banking_Application.Services
         }
 
 
-            public bool IsValidMenuOption(string input)
+        public bool IsValidMenuOption(string input)
+        {
+            // Assuming your menu options are numbers from 1 to 6
+            return int.TryParse(input, out int option) && option >= 1 && option <= 6;
+        }
+
+        public bool IsValidName(string name)
+        {
+            // Check if the name is not null or empty
+            if (string.IsNullOrWhiteSpace(name))
             {
-                // Assuming your menu options are numbers from 1 to 6
-                return int.TryParse(input, out int option) && option >= 1 && option <= 6;
+                return false;
             }
+
+            // Check if the name contains only letters and spaces
+            if (!name.All(c => char.IsLetter(c) || char.IsWhiteSpace(c)))
+            {
+                return false;
+            }
+
+            // Check for maximum length (50 characters)
+            if (name.Length > 50)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool IsValidAddress(string address)
+        {
+            // Check if the address is not null or empty
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return false;
+            }
+
+            // Check if the address contains only allowed characters
+            // Allowing letters, digits, spaces, and some special characters
+            if (!address.All(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || c == '-' || c == '.'))
+            {
+                return false;
+            }
+
+            // Check for maximum length (100 characters)
+            if (address.Length > 100)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool IsValidOverdraftAmount(double overdraftAmount)
+        {
+            // Check if the overdraft amount is within the acceptable range
+            return overdraftAmount >= MinOverdraftAmount && overdraftAmount <= MaxOverdraftAmount;
+        }
+
+        public bool IsValidInterestRate(double interestRate)
+        {
+
+            // Check if the interest rate is within the acceptable range
+            return interestRate >= MinInterestRate && interestRate <= MaxInterestRate;
+        }
 
 
     }

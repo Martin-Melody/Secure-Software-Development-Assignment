@@ -433,11 +433,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\marti\\OneDrive\\Documents\\College\\Year 4\\Secure Software Development\\SSD-Assignment---Banking-Application\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
+      "projectUniqueName": "E:\\College\\Year 4\\Secure Software Development\\Secure-Software-Development-Assignment\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
       "projectName": "SSD Assignment - Banking Application",
-      "projectPath": "C:\\Users\\marti\\OneDrive\\Documents\\College\\Year 4\\Secure Software Development\\SSD-Assignment---Banking-Application\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
+      "projectPath": "E:\\College\\Year 4\\Secure Software Development\\Secure-Software-Development-Assignment\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
       "packagesPath": "C:\\Users\\marti\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\marti\\OneDrive\\Documents\\College\\Year 4\\Secure Software Development\\SSD-Assignment---Banking-Application\\SSD Assignment - Banking Application\\obj\\",
+      "outputPath": "E:\\College\\Year 4\\Secure Software Development\\Secure-Software-Development-Assignment\\SSD Assignment - Banking Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\marti\\AppData\\Roaming\\NuGet\\NuGet.Config",

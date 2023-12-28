@@ -55,9 +55,9 @@ namespace SSD_Assignment___Banking_Application.Services
             else // Savings Account
             {
                 double interestRate = _validationService.GetValidDouble("Enter Interest Rate:");
-                string[] sensitiveData = { name, addressLine1, addressLine2, addressLine3, town, interestRate.ToString() };
-                string[] encryptedData = _encryptionService.EncryptVariables(sensitiveData);
-                bankAccount = new Savings_Account(encryptedData);
+                string encryptedInterestRate = _encryptionService.Encrypt(interestRate.ToString());
+                
+                bankAccount = new Savings_Account(encryptedName, encryptedaddressLine1, encryptedaddressLine2, encryptedaddressLine3, encryptedtown, encryptedBalance, encryptedInterestRate);
             }
 
             string accNo = _dataAccessLayer.AddBankAccount(bankAccount);
@@ -193,7 +193,7 @@ namespace SSD_Assignment___Banking_Application.Services
                 return;
             }
 
-            if (bankAccount.getAvailableFunds() < amount)
+            if (bankAccount.GetAvailableFunds() < amount)
             {
                 Console.WriteLine("Insufficient funds available for withdrawal.");
                 return;

@@ -92,27 +92,27 @@ namespace Banking_Application
                         if(accountType == Account_Type.Current_Account)
                         {
                             Current_Account ca = new Current_Account();
-                            ca.accountNo = dr.GetString(0);
-                            ca.name = dr.GetString(1);
-                            ca.address_line_1 = dr.GetString(2);
-                            ca.address_line_2 = dr.GetString(3);
-                            ca.address_line_3 = dr.GetString(4);
-                            ca.town = dr.GetString(5);
-                            ca.balance = dr.GetDouble(6);
-                            ca.overdraftAmount = dr.GetDouble(8);
+                            ca.AccountNo = dr.GetString(0);
+                            ca.Name = dr.GetString(1);
+                            ca.AddressLine1 = dr.GetString(2);
+                            ca.AddressLine2 = dr.GetString(3);
+                            ca.AddressLine3 = dr.GetString(4);
+                            ca.Town = dr.GetString(5);
+                            ca.Balance = dr.GetString(6);
+                            ca.OverdraftAmount = dr.GetString(8);
                             accounts.Add(ca);
                         }
                         else
                         {
                             Savings_Account sa = new Savings_Account();
-                            sa.accountNo = dr.GetString(0);
-                            sa.name = dr.GetString(1);
-                            sa.address_line_1 = dr.GetString(2);
-                            sa.address_line_2 = dr.GetString(3);
-                            sa.address_line_3 = dr.GetString(4);
-                            sa.town = dr.GetString(5);
-                            sa.balance = dr.GetDouble(6);
-                            sa.interestRate = dr.GetDouble(9);
+                            sa.AccountNo = dr.GetString(0);
+                            sa.Name = dr.GetString(1);
+                            sa.AddressLine1 = dr.GetString(2);
+                            sa.AddressLine2 = dr.GetString(3);
+                            sa.AddressLine3 = dr.GetString(4);
+                            sa.Town = dr.GetString(5);
+                            sa.Balance = dr.GetString(6);
+                            sa.InterestRate = dr.GetDouble(9);
                             accounts.Add(sa);
                         }
 
@@ -131,11 +131,11 @@ namespace Banking_Application
             Savings_Account savingsAccount = ba as Savings_Account;
 
             // Encrypt the account number
-            byte[] encryptedData = cryptoManager.EncryptText(ba.accountNo);
+            byte[] encryptedData = cryptoManager.EncryptText(ba.AccountNo);
             string encryptedAccountNumber = Convert.ToBase64String(encryptedData);
 
             // Store the encrypted account number
-            ba.accountNo = encryptedAccountNumber;
+            ba.AccountNo = encryptedAccountNumber;
             accounts.Add(ba);
 
             // Use a parameterized query to prevent SQL injection
@@ -149,18 +149,42 @@ namespace Banking_Application
               VALUES 
               (@accountNo, @name, @address_line_1, @address_line_2, @address_line_3, @town, @balance, @accountType, @overdraftAmount, @interestRate)";
 
-                command.Parameters.AddWithValue("@accountNo", encryptedAccountNumber);
-                command.Parameters.AddWithValue("@name", ba.name);
-                command.Parameters.AddWithValue("@address_line_1", ba.address_line_1);
-                command.Parameters.AddWithValue("@address_line_2", ba.address_line_2);
-                command.Parameters.AddWithValue("@address_line_3", ba.address_line_3);
-                command.Parameters.AddWithValue("@town", ba.town);
-                command.Parameters.AddWithValue("@balance", ba.balance);
+                command.Parameters.AddWithValue("@accountNo", !string.IsNullOrEmpty(encryptedAccountNumber) ? encryptedAccountNumber : DBNull.Value);
+                command.Parameters.AddWithValue("@name", !string.IsNullOrEmpty(ba.Name) ? ba.Name : DBNull.Value);
+                command.Parameters.AddWithValue("@address_line_1", !string.IsNullOrEmpty(ba.AddressLine1) ? ba.AddressLine1 : DBNull.Value);
+                command.Parameters.AddWithValue("@address_line_2", !string.IsNullOrEmpty(ba.AddressLine2) ? ba.AddressLine2 : DBNull.Value);
+                command.Parameters.AddWithValue("@address_line_3", !string.IsNullOrEmpty(ba.AddressLine3) ? ba.AddressLine3 : DBNull.Value);
+                command.Parameters.AddWithValue("@town", !string.IsNullOrEmpty(ba.Town) ? ba.Town : DBNull.Value);
+                command.Parameters.AddWithValue("@balance", ba.Balance); // Assuming balance is a non-nullable double
                 command.Parameters.AddWithValue("@accountType", currentAccount != null ? 1 : 2);
-                command.Parameters.AddWithValue("@overdraftAmount", currentAccount != null ? (object)currentAccount.overdraftAmount : DBNull.Value);
-                command.Parameters.AddWithValue("@interestRate", savingsAccount != null ? (object)savingsAccount.interestRate : DBNull.Value);
+                command.Parameters.AddWithValue("@overdraftAmount", currentAccount != null && !string.IsNullOrEmpty(currentAccount.OverdraftAmount) ? (object)currentAccount.OverdraftAmount : DBNull.Value);
+                command.Parameters.AddWithValue("@interestRate", savingsAccount != null && !string.IsNullOrEmpty(savingsAccount.InterestRate.ToString()) ? (object)savingsAccount.InterestRate : DBNull.Value);
 
-                command.ExecuteNonQuery();
+
+                Console.WriteLine("================================================================");
+                Console.WriteLine("Account No : ", ba.AccountNo);
+                Console.WriteLine("Name : ", ba.Name);
+                Console.WriteLine("Address line 1 : ", ba.AddressLine1);
+                Console.WriteLine("Address line 2 : ", ba.AddressLine2);
+                Console.WriteLine("Address line 3 : ", ba.AddressLine3);
+                Console.WriteLine("Town : ", ba.Town);
+                Console.WriteLine("Balance", ba.Balance);
+                Console.WriteLine("AccountType : ", currentAccount != null? 1: 2);
+                Console.WriteLine("Over Draft Amount : ", currentAccount != null ? (object)currentAccount.OverdraftAmount : DBNull.Value);
+                Console.WriteLine("Interest Rate : ", savingsAccount != null ? (object)savingsAccount.InterestRate : DBNull.Value);
+                Console.WriteLine("================================================================");
+
+
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error executing SQL command: " + ex.Message);
+                    // Optionally, log the full exception details
+                    // This can help identify which parameter is causing the issue
+                }
             }
 
             // Return the encrypted account number as confirmation
@@ -174,7 +198,7 @@ namespace Banking_Application
             foreach(Bank_Account ba in accounts)
             {
 
-                if (ba.accountNo.Equals(accNo))
+                if (ba.AccountNo.Equals(accNo))
                 {
                     return ba;
                 }
@@ -192,7 +216,7 @@ namespace Banking_Application
             foreach (Bank_Account ba in accounts)
             {
 
-                if (ba.accountNo.Equals(accNo))
+                if (ba.AccountNo.Equals(accNo))
                 {
                     toRemove = ba;
                     break;
@@ -210,7 +234,7 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = '" + toRemove.accountNo + "'";
+                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = '" + toRemove.AccountNo + "'";
                     command.ExecuteNonQuery();
 
                 }
@@ -228,9 +252,9 @@ namespace Banking_Application
             foreach (Bank_Account ba in accounts)
             {
 
-                if (ba.accountNo.Equals(accNo))
+                if (ba.AccountNo.Equals(accNo))
                 {
-                    ba.lodge(amountToLodge);
+                    ba.Lodge(amountToLodge);
                     toLodgeTo = ba;
                     break;
                 }
@@ -246,7 +270,7 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toLodgeTo.balance + " WHERE accountNo = '" + toLodgeTo.accountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toLodgeTo.Balance + " WHERE accountNo = '" + toLodgeTo.AccountNo + "'";
                     command.ExecuteNonQuery();
 
                 }
@@ -265,9 +289,9 @@ namespace Banking_Application
             foreach (Bank_Account ba in accounts)
             {
 
-                if (ba.accountNo.Equals(accNo))
+                if (ba.AccountNo.Equals(accNo))
                 {
-                    result = ba.withdraw(amountToWithdraw);
+                    result = ba.Withdraw(amountToWithdraw);
                     toWithdrawFrom = ba;
                     break;
                 }
@@ -283,7 +307,7 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toWithdrawFrom.balance + " WHERE accountNo = '" + toWithdrawFrom.accountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toWithdrawFrom.Balance + " WHERE accountNo = '" + toWithdrawFrom.AccountNo + "'";
                     command.ExecuteNonQuery();
 
                 }
