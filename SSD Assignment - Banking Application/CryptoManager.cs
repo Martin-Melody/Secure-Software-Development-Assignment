@@ -7,82 +7,87 @@ using System.Threading.Tasks;
 
 namespace SSD_Assignment___Banking_Application
 {
+    using System;
+    using System.IO;
+    using System.Security.Cryptography;
+    using System.Text;
+
     public class CryptoManager
     {
-        private Aes aes;
+        private readonly byte[] _key;
+        private readonly byte[] _iv;
 
         public CryptoManager()
         {
-            InitializeAes();
+            _key = GenerateKey();
+            _iv = GenerateIV();
         }
 
-        private void InitializeAes()
+        private static byte[] GenerateKey(int keySize = 32)
         {
-            string cryptoKeyName = "key name";
-            CngProvider keyStorageProvider = CngProvider.MicrosoftSoftwareKeyStorageProvider;
-
-            // Check if the key already exists.
-            if (!CngKey.Exists(cryptoKeyName, keyStorageProvider))
+            using (var rng = new RNGCryptoServiceProvider())
             {
-                // If it doesn't exist, create it.
-                CngKeyCreationParameters keyCreationParameters = new CngKeyCreationParameters()
+                byte[] key = new byte[keySize];
+                rng.GetBytes(key);
+                return key;
+            }
+        }
+
+        private static byte[] GenerateIV()
+        {
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                byte[] iv = new byte[16]; // 128 bits for AES
+                rng.GetBytes(iv);
+                return iv;
+            }
+        }
+
+
+        public byte[] EncryptText(string plainText)
+        {
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = _key;
+                aesAlg.IV = _iv;
+
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                using (var msEncrypt = new MemoryStream())
                 {
-                    Provider = keyStorageProvider,
-                    ExportPolicy = CngExportPolicies.None,
-                };
-
-                // You may need to specify additional parameters depending on your security requirements.
-                CngAlgorithm aesAlgorithm = new CngAlgorithm("AES");
-
-                // Create the key.
-                CngKey.Create(aesAlgorithm, cryptoKeyName, keyCreationParameters);
-            }
-
-            // Now that we've ensured the key exists, create the AesCng object.
-            aes = new AesCng(cryptoKeyName, keyStorageProvider);
-        }
-
-        public string ConverToBase64(byte[] encryptedData)
-        {
-            return Convert.ToBase64String(encryptedData);
-        }
-
-
-        public byte[] EncryptText(string text)
-        {
-            byte[] plaintextData = Encoding.ASCII.GetBytes(text);
-            return Encrypt(plaintextData);
-        }
-
-        public string DecryptText(byte[] encryptedData)
-        {
-            byte[] decryptedData = Decrypt(encryptedData);
-            return Encoding.ASCII.GetString(decryptedData);
-        }
-
-        private byte[] Encrypt(byte[] plaintextData)
-        {
-            using (var msEncrypt = new MemoryStream())
-            using (var encryptor = aes.CreateEncryptor())
-            using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-            {
-                csEncrypt.Write(plaintextData, 0, plaintextData.Length);
-                csEncrypt.FlushFinalBlock();
-                return msEncrypt.ToArray();
+                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (var swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(plainText);
+                        }
+                        return msEncrypt.ToArray();
+                    }
+                }
             }
         }
 
-        private byte[] Decrypt(byte[] encryptedData)
+        public string DecryptText(byte[] cipherText)
         {
-            using (var msDecrypt = new MemoryStream(encryptedData))
-            using (var decryptor = aes.CreateDecryptor())
-            using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+            using (Aes aesAlg = Aes.Create())
             {
-                byte[] plaintextData = new byte[encryptedData.Length];
-                int bytesRead = csDecrypt.Read(plaintextData, 0, plaintextData.Length);
-                Array.Resize(ref plaintextData, bytesRead);
-                return plaintextData;
+                aesAlg.Key = _key;
+                aesAlg.IV = _iv;
+
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                using (var msDecrypt = new MemoryStream(cipherText))
+                {
+                    using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (var srDecrypt = new StreamReader(csDecrypt))
+                        {
+                            return srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
             }
         }
     }
+
 }

@@ -18,7 +18,7 @@ namespace Banking_Application
         private CryptoManager cryptoManager = new CryptoManager();
         private CngKeyManager cngKeyManager = new CngKeyManager();
 
-        private Data_Access_Layer() // Singleton Design Pattern
+        public Data_Access_Layer() // Singleton Design Pattern
         {
             // Initialize your crypto manager and cng manager here
             cngKeyManager.SetupCngProvider();

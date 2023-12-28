@@ -1,4 +1,5 @@
 ﻿using Banking_Application;
+using SSD_Assignment___Banking_Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,13 @@ namespace SSD_Assignment___Banking_Application.Services
     {
         private readonly ValidationService _validationService;
         private readonly Data_Access_Layer _dataAccessLayer;
+        private readonly IEncryptionService _encryptionService;
 
-        public BankAccountService(ValidationService validationService, Data_Access_Layer dataAccessLayer)
+        public BankAccountService(ValidationService validationService, Data_Access_Layer dataAccessLayer, IEncryptionService encryptionService)
         {
             _validationService = validationService;
             _dataAccessLayer = dataAccessLayer;
+            _encryptionService = encryptionService;
         }
 
         public void AddBankAccount()
@@ -24,22 +27,37 @@ namespace SSD_Assignment___Banking_Application.Services
 
             string accountType = GetValidAccountType();
             string name = _validationService.GetValidInput("Enter Name:");
+            string encryptedName = _encryptionService.Encrypt(name);
+
             string addressLine1 = _validationService.GetValidInput("Enter Address Line 1:");
+            string encryptedaddressLine1 = _encryptionService.Encrypt(addressLine1);
+
             string addressLine2 = _validationService.GetValidInput("Enter Address Line 2:");
+            string encryptedaddressLine2 = _encryptionService.Encrypt(addressLine2);
+
             string addressLine3 = _validationService.GetValidInput("Enter Address Line 3:");
+            string encryptedaddressLine3 = _encryptionService.Encrypt(addressLine3);
+
             string town = _validationService.GetValidInput("Enter Town:");
+            string encryptedtown = _encryptionService.Encrypt(town);
+
             double balance = _validationService.GetValidDouble("Enter Opening Balance:");
+            string encryptedBalance = _encryptionService.Encrypt(balance.ToString());
 
             Bank_Account bankAccount;
             if (accountType == "1") // Current Account
             {
                 double overdraftAmount = _validationService.GetValidDouble("Enter Overdraft Amount:");
-                bankAccount = new Current_Account(name, addressLine1, addressLine2, addressLine3, town, balance, overdraftAmount);
+                string encryptedOverdraftAmount = _encryptionService.Encrypt(overdraftAmount.ToString());
+                
+                bankAccount = new Current_Account(encryptedName, encryptedaddressLine1, encryptedaddressLine2, encryptedaddressLine3, encryptedtown, encryptedBalance, encryptedOverdraftAmount);
             }
             else // Savings Account
             {
                 double interestRate = _validationService.GetValidDouble("Enter Interest Rate:");
-                bankAccount = new Savings_Account(name, addressLine1, addressLine2, addressLine3, town, balance, interestRate);
+                string[] sensitiveData = { name, addressLine1, addressLine2, addressLine3, town, interestRate.ToString() };
+                string[] encryptedData = _encryptionService.EncryptVariables(sensitiveData);
+                bankAccount = new Savings_Account(encryptedData);
             }
 
             string accNo = _dataAccessLayer.AddBankAccount(bankAccount);

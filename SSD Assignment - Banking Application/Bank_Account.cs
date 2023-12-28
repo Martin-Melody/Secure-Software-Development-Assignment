@@ -15,14 +15,14 @@ namespace Banking_Application
         public String address_line_2;
         public String address_line_3;
         public String town;
-        public double balance;
+        public String balance;
 
         public Bank_Account()
         {
 
         }
         
-        public Bank_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, double balance)
+        public Bank_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, string balance)
         {
             this.accountNo = System.Guid.NewGuid().ToString();
             this.name = name;

@@ -41,3 +41,5 @@ C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD
 C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD-Assignment---Banking-Application\SSD Assignment - Banking Application\obj\Debug\net6.0\SSD Assignment - Banking Application.pdb
 C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD-Assignment---Banking-Application\SSD Assignment - Banking Application\obj\Debug\net6.0\SSD Assignment - Banking Application.genruntimeconfig.cache
 C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD-Assignment---Banking-Application\SSD Assignment - Banking Application\obj\Debug\net6.0\ref\SSD Assignment - Banking Application.dll
+C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD-Assignment---Banking-Application\SSD Assignment - Banking Application\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\marti\OneDrive\Documents\College\Year 4\Secure Software Development\SSD-Assignment---Banking-Application\SSD Assignment - Banking Application\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll

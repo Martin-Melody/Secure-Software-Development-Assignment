@@ -9,14 +9,14 @@ namespace Banking_Application
     public class Current_Account: Bank_Account
     {
 
-        public double overdraftAmount;
+        public string overdraftAmount;
 
         public Current_Account(): base()
         {
 
         }
         
-        public Current_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, double balance, double overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
+        public Current_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, String balance, String overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
             this.overdraftAmount = overdraftAmount;
         }
@@ -38,7 +38,7 @@ namespace Banking_Application
 
         public override double getAvailableFunds()
         {
-            return (base.balance + overdraftAmount);
+            return (double.TryParse(base.balance, out double result) + overdraftAmount);
         }
 
         public override String ToString()
