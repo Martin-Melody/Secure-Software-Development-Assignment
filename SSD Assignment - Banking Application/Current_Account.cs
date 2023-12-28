@@ -27,7 +27,7 @@ namespace Banking_Application
         public Current_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, String balance, String overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
 
-            this.OverdraftAmount = OverdraftAmount;
+            this.OverdraftAmount = overdraftAmount;
         }
 
         public override bool Withdraw(double amountToWithdraw)

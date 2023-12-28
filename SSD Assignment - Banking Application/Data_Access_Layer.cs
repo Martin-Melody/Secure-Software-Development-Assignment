@@ -61,17 +61,21 @@ namespace Banking_Application
                         balance REAL NOT NULL,
                         accountType INTEGER NOT NULL,
                         overdraftAmount REAL,
-                        interestRate REAL
+                        interestRate REAL,
+                        creationDate TEXT NOT NULL
                     ) WITHOUT ROWID
                 ";
 
                 command.ExecuteNonQuery();
-                
+
             }
         }
 
         public void loadBankAccounts()
         {
+
+            // Replace this with check if database and tables exists method to remove one if else statement
+
             if (!File.Exists(Data_Access_Layer.databaseName))
                 initialiseDatabase();
             else
@@ -83,13 +87,13 @@ namespace Banking_Application
                     var command = connection.CreateCommand();
                     command.CommandText = "SELECT * FROM Bank_Accounts";
                     SqliteDataReader dr = command.ExecuteReader();
-                    
-                    while(dr.Read())
+
+                    while (dr.Read())
                     {
 
                         int accountType = dr.GetInt16(7);
 
-                        if(accountType == Account_Type.Current_Account)
+                        if (accountType == Account_Type.Current_Account)
                         {
                             Current_Account ca = new Current_Account();
                             ca.AccountNo = dr.GetString(0);
@@ -112,7 +116,7 @@ namespace Banking_Application
                             sa.AddressLine3 = dr.GetString(4);
                             sa.Town = dr.GetString(5);
                             sa.Balance = dr.GetString(6);
-                            sa.InterestRate = dr.GetDouble(9);
+                            sa.InterestRate = dr.GetString(9);
                             accounts.Add(sa);
                         }
 
@@ -126,6 +130,9 @@ namespace Banking_Application
 
         public string AddBankAccount(Bank_Account ba)
         {
+
+            EnsureDatabaseInitialized();
+
             // Perform type-specific logic
             Current_Account currentAccount = ba as Current_Account;
             Savings_Account savingsAccount = ba as Savings_Account;
@@ -145,9 +152,9 @@ namespace Banking_Application
                 var command = connection.CreateCommand();
                 command.CommandText =
                     @"INSERT INTO Bank_Accounts 
-              (accountNo, name, address_line_1, address_line_2, address_line_3, town, balance, accountType, overdraftAmount, interestRate)
+              (accountNo, name, address_line_1, address_line_2, address_line_3, town, balance, accountType, overdraftAmount, interestRate, creationDate)
               VALUES 
-              (@accountNo, @name, @address_line_1, @address_line_2, @address_line_3, @town, @balance, @accountType, @overdraftAmount, @interestRate)";
+              (@accountNo, @name, @address_line_1, @address_line_2, @address_line_3, @town, @balance, @accountType, @overdraftAmount, @interestRate, @creationDate)";
 
                 command.Parameters.AddWithValue("@accountNo", !string.IsNullOrEmpty(encryptedAccountNumber) ? encryptedAccountNumber : DBNull.Value);
                 command.Parameters.AddWithValue("@name", !string.IsNullOrEmpty(ba.Name) ? ba.Name : DBNull.Value);
@@ -155,25 +162,11 @@ namespace Banking_Application
                 command.Parameters.AddWithValue("@address_line_2", !string.IsNullOrEmpty(ba.AddressLine2) ? ba.AddressLine2 : DBNull.Value);
                 command.Parameters.AddWithValue("@address_line_3", !string.IsNullOrEmpty(ba.AddressLine3) ? ba.AddressLine3 : DBNull.Value);
                 command.Parameters.AddWithValue("@town", !string.IsNullOrEmpty(ba.Town) ? ba.Town : DBNull.Value);
-                command.Parameters.AddWithValue("@balance", ba.Balance); // Assuming balance is a non-nullable double
+                command.Parameters.AddWithValue("@balance", ba.Balance); 
                 command.Parameters.AddWithValue("@accountType", currentAccount != null ? 1 : 2);
                 command.Parameters.AddWithValue("@overdraftAmount", currentAccount != null && !string.IsNullOrEmpty(currentAccount.OverdraftAmount) ? (object)currentAccount.OverdraftAmount : DBNull.Value);
                 command.Parameters.AddWithValue("@interestRate", savingsAccount != null && !string.IsNullOrEmpty(savingsAccount.InterestRate.ToString()) ? (object)savingsAccount.InterestRate : DBNull.Value);
-
-
-                Console.WriteLine("================================================================");
-                Console.WriteLine("Account No : ", ba.AccountNo);
-                Console.WriteLine("Name : ", ba.Name);
-                Console.WriteLine("Address line 1 : ", ba.AddressLine1);
-                Console.WriteLine("Address line 2 : ", ba.AddressLine2);
-                Console.WriteLine("Address line 3 : ", ba.AddressLine3);
-                Console.WriteLine("Town : ", ba.Town);
-                Console.WriteLine("Balance", ba.Balance);
-                Console.WriteLine("AccountType : ", currentAccount != null? 1: 2);
-                Console.WriteLine("Over Draft Amount : ", currentAccount != null ? (object)currentAccount.OverdraftAmount : DBNull.Value);
-                Console.WriteLine("Interest Rate : ", savingsAccount != null ? (object)savingsAccount.InterestRate : DBNull.Value);
-                Console.WriteLine("================================================================");
-
+                command.Parameters.AddWithValue("@creationDate", DateTime.Now.ToString("yyyy-MM-dd"));
 
                 try
                 {
@@ -182,8 +175,6 @@ namespace Banking_Application
                 catch (Exception ex)
                 {
                     Console.WriteLine("Error executing SQL command: " + ex.Message);
-                    // Optionally, log the full exception details
-                    // This can help identify which parameter is causing the issue
                 }
             }
 
@@ -192,10 +183,10 @@ namespace Banking_Application
         }
 
 
-        public Bank_Account findBankAccountByAccNo(String accNo) 
-        { 
-        
-            foreach(Bank_Account ba in accounts)
+        public Bank_Account findBankAccountByAccNo(String accNo)
+        {
+
+            foreach (Bank_Account ba in accounts)
             {
 
                 if (ba.AccountNo.Equals(accNo))
@@ -205,14 +196,14 @@ namespace Banking_Application
 
             }
 
-            return null; 
+            return null;
         }
 
-        public bool closeBankAccount(String accNo) 
+        public bool closeBankAccount(String accNo)
         {
 
             Bank_Account toRemove = null;
-            
+
             foreach (Bank_Account ba in accounts)
             {
 
@@ -316,6 +307,39 @@ namespace Banking_Application
             }
 
         }
+
+        private void EnsureDatabaseInitialized()
+        {
+            bool shouldInitialize = false;
+
+            if (!File.Exists(Data_Access_Layer.databaseName))
+            {
+                shouldInitialize = true;
+            }
+            else
+            {
+                using (var connection = getDatabaseConnection())
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name='Bank_Accounts';";
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                        {
+                            shouldInitialize = true;
+                        }
+                    }
+                }
+            }
+
+            if (shouldInitialize)
+            {
+                initialiseDatabase();
+            }
+        }
+
+
 
     }
 }

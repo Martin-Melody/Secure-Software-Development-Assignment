@@ -83,10 +83,6 @@ namespace Banking_Application
             set { _town = value; }
         }
 
-
-
-
-
         public void Lodge(double amountIn)
         {
             if (amountIn < 0)

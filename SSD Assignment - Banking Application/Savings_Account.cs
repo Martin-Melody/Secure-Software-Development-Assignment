@@ -10,9 +10,9 @@ namespace Banking_Application
     public class Savings_Account : Bank_Account
     {
 
-        private double _interestRate;
+        private string _interestRate;
 
-        public double InterestRate
+        public string InterestRate
         {
             get { return _interestRate; }
             set { _interestRate = value; }
@@ -21,14 +21,7 @@ namespace Banking_Application
         public Savings_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, string balance, string interestRate) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
 
-            if (double.TryParse(balance, out double result))
-            {
-                this.InterestRate = result;
-            }
-            else
-            {
-                throw new ArgumentException("Cannot convert interest rate to double");
-            }
+            this.InterestRate = interestRate;
 
         }
 
