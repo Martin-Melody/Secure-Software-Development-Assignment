@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SSD Assignment - Banking Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77089545d1dcff233cc1603a1281f83b284a4a64")]
 [assembly: System.Reflection.AssemblyProductAttribute("SSD Assignment - Banking Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SSD Assignment - Banking Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

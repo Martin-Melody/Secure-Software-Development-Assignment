@@ -6,23 +6,34 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using SSD_Assignment___Banking_Application;
+using SSD_Assignment___Banking_Application.Interfaces;
 
 namespace Banking_Application
 {
     public class Data_Access_Layer
     {
-        private List<Bank_Account> accounts;
         public static string databaseName = "Banking Database.sqlite";
-        private static Data_Access_Layer instance = new Data_Access_Layer();
 
         private CryptoManager cryptoManager = new CryptoManager();
         private CngKeyManager cngKeyManager = new CngKeyManager();
 
-        public Data_Access_Layer() // Singleton Design Pattern
+        private readonly IEncryptionService encryptionService;
+        private static Data_Access_Layer instance;
+
+
+        public Data_Access_Layer(IEncryptionService encryptionService) 
         {
-            // Initialize your crypto manager and cng manager here
+            this.encryptionService = encryptionService;
             cngKeyManager.SetupCngProvider();
-            accounts = new List<Bank_Account>();
+            EnsureDatabaseInitialized();
+        }
+
+        public static void Initialize(IEncryptionService encryptionService)
+        {
+            if (instance == null)
+            {
+                instance = new Data_Access_Layer(encryptionService);
+            }
         }
 
         public static Data_Access_Layer getInstance()
@@ -104,7 +115,6 @@ namespace Banking_Application
                             ca.Town = dr.GetString(5);
                             ca.Balance = dr.GetString(6);
                             ca.OverdraftAmount = dr.GetString(8);
-                            accounts.Add(ca);
                         }
                         else
                         {
@@ -117,7 +127,6 @@ namespace Banking_Application
                             sa.Town = dr.GetString(5);
                             sa.Balance = dr.GetString(6);
                             sa.InterestRate = dr.GetString(9);
-                            accounts.Add(sa);
                         }
 
 
@@ -130,9 +139,6 @@ namespace Banking_Application
 
         public string AddBankAccount(Bank_Account ba)
         {
-
-            EnsureDatabaseInitialized();
-
             // Perform type-specific logic
             Current_Account currentAccount = ba as Current_Account;
             Savings_Account savingsAccount = ba as Savings_Account;
@@ -143,7 +149,6 @@ namespace Banking_Application
 
             // Store the encrypted account number
             ba.AccountNo = encryptedAccountNumber;
-            accounts.Add(ba);
 
             // Use a parameterized query to prevent SQL injection
             using (var connection = getDatabaseConnection())
@@ -166,7 +171,7 @@ namespace Banking_Application
                 command.Parameters.AddWithValue("@accountType", currentAccount != null ? 1 : 2);
                 command.Parameters.AddWithValue("@overdraftAmount", currentAccount != null && !string.IsNullOrEmpty(currentAccount.OverdraftAmount) ? (object)currentAccount.OverdraftAmount : DBNull.Value);
                 command.Parameters.AddWithValue("@interestRate", savingsAccount != null && !string.IsNullOrEmpty(savingsAccount.InterestRate.ToString()) ? (object)savingsAccount.InterestRate : DBNull.Value);
-                command.Parameters.AddWithValue("@creationDate", DateTime.Now.ToString("yyyy-MM-dd"));
+                command.Parameters.AddWithValue("@creationDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                 try
                 {
@@ -186,14 +191,55 @@ namespace Banking_Application
         public Bank_Account findBankAccountByAccNo(String accNo)
         {
 
-            foreach (Bank_Account ba in accounts)
+            try
+            {
+                using (var connection = getDatabaseConnection())
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = "SELECT * FROM Bank_Accounts WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@accountNo", accNo);
+
+                    using (SqliteDataReader dr = command.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            int accountType = dr.GetInt16(7);
+                            if (accountType == Account_Type.Current_Account)
+                            {
+                                Current_Account ca = new Current_Account();
+                                ca.AccountNo = dr.GetString(0);
+                                ca.Name = encryptionService.Decrypt(dr.GetString(1));
+                                ca.AddressLine1 = encryptionService.Decrypt(dr.GetString(2));
+                                ca.AddressLine2 = encryptionService.Decrypt(dr.GetString(3));
+                                ca.AddressLine3 = encryptionService.Decrypt(dr.GetString(4));
+                                ca.Town = encryptionService.Decrypt(dr.GetString(5));
+                                ca.Balance = encryptionService.Decrypt(dr.GetString(6));
+                                ca.OverdraftAmount = encryptionService.Decrypt(dr.GetString(8));
+
+                                return ca;
+                            }
+                            else
+                            {
+                                Savings_Account sa = new Savings_Account();
+                                sa.AccountNo = dr.GetString(0);
+                                sa.Name = encryptionService.Decrypt(dr.GetString(1));
+                                sa.AddressLine1 = encryptionService.Decrypt(dr.GetString(2));
+                                sa.AddressLine2 = encryptionService.Decrypt(dr.GetString(3));
+                                sa.AddressLine3 = encryptionService.Decrypt(dr.GetString(4));
+                                sa.Town = encryptionService.Decrypt(dr.GetString(5));
+                                sa.Balance = encryptionService.Decrypt(dr.GetString(6));
+                                sa.InterestRate = encryptionService.Decrypt(dr.GetString(8));
+                                return sa;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
             {
 
-                if (ba.AccountNo.Equals(accNo))
-                {
-                    return ba;
-                }
-
+                Console.WriteLine($"Error finding account with account number of : {accNo}\n {ex.Message}");
             }
 
             return null;
@@ -201,32 +247,43 @@ namespace Banking_Application
 
         public bool closeBankAccount(String accNo)
         {
-            Bank_Account toRemove = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
+            Bank_Account toRemove = findBankAccountByAccNo(accNo);
 
             if (toRemove == null)
             {
-                return false;
+                Console.WriteLine("Account not found.");
+                return false; // Account not found
             }
-            else
-            {
-                accounts.Remove(toRemove);
 
+            try
+            {
                 using (var connection = getDatabaseConnection())
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
                     command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = @accountNo";
                     command.Parameters.AddWithValue("@accountNo", toRemove.AccountNo);
-                    command.ExecuteNonQuery();
-                }
+                    int rowsAffected = command.ExecuteNonQuery();
 
-                return true;
+                    if (rowsAffected == 0)
+                    {
+                        Console.WriteLine("No account was deleted.");
+                        return false; // No rows affected, account not deleted
+                    }
+
+                    return true; // Account successfully deleted
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error closing account: {ex.Message}");
+                return false; // Error occurred
             }
         }
 
         public bool lodge(String accNo, double amountToLodge)
         {
-            var toLodgeTo = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
+            var toLodgeTo = findBankAccountByAccNo(accNo);
 
             if (toLodgeTo == null)
             {
@@ -253,7 +310,7 @@ namespace Banking_Application
 
         public bool withdraw(String accNo, double amountToWithdraw)
         {
-            var toWithdrawFrom = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
+            var toWithdrawFrom = findBankAccountByAccNo(accNo);
 
             if (toWithdrawFrom == null)
             {
