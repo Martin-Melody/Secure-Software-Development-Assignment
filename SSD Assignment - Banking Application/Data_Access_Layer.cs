@@ -201,22 +201,12 @@ namespace Banking_Application
 
         public bool closeBankAccount(String accNo)
         {
-
-            Bank_Account toRemove = null;
-
-            foreach (Bank_Account ba in accounts)
-            {
-
-                if (ba.AccountNo.Equals(accNo))
-                {
-                    toRemove = ba;
-                    break;
-                }
-
-            }
+            Bank_Account toRemove = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
 
             if (toRemove == null)
+            {
                 return false;
+            }
             else
             {
                 accounts.Remove(toRemove);
@@ -225,88 +215,73 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = '" + toRemove.AccountNo + "'";
+                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@accountNo", toRemove.AccountNo);
                     command.ExecuteNonQuery();
-
                 }
 
                 return true;
             }
-
         }
 
         public bool lodge(String accNo, double amountToLodge)
         {
-
-            Bank_Account toLodgeTo = null;
-
-            foreach (Bank_Account ba in accounts)
-            {
-
-                if (ba.AccountNo.Equals(accNo))
-                {
-                    ba.Lodge(amountToLodge);
-                    toLodgeTo = ba;
-                    break;
-                }
-
-            }
+            var toLodgeTo = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
 
             if (toLodgeTo == null)
+            {
                 return false;
+            }
             else
             {
+                toLodgeTo.Lodge(amountToLodge);
 
                 using (var connection = getDatabaseConnection())
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toLodgeTo.Balance + " WHERE accountNo = '" + toLodgeTo.AccountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@balance", toLodgeTo.Balance);
+                    command.Parameters.AddWithValue("@accountNo", toLodgeTo.AccountNo);
                     command.ExecuteNonQuery();
-
                 }
 
                 return true;
             }
-
         }
+
 
         public bool withdraw(String accNo, double amountToWithdraw)
         {
+            var toWithdrawFrom = accounts.FirstOrDefault(ba => ba.AccountNo.Equals(accNo));
 
-            Bank_Account toWithdrawFrom = null;
-            bool result = false;
-
-            foreach (Bank_Account ba in accounts)
+            if (toWithdrawFrom == null)
             {
-
-                if (ba.AccountNo.Equals(accNo))
-                {
-                    result = ba.Withdraw(amountToWithdraw);
-                    toWithdrawFrom = ba;
-                    break;
-                }
-
-            }
-
-            if (toWithdrawFrom == null || result == false)
                 return false;
+            }
             else
             {
+                bool result = toWithdrawFrom.Withdraw(amountToWithdraw);
+
+                if (!result)
+                {
+                    return false;
+                }
 
                 using (var connection = getDatabaseConnection())
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toWithdrawFrom.Balance + " WHERE accountNo = '" + toWithdrawFrom.AccountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@balance", toWithdrawFrom.Balance);
+                    command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.AccountNo);
                     command.ExecuteNonQuery();
-
                 }
 
                 return true;
             }
-
         }
+
 
         private void EnsureDatabaseInitialized()
         {
