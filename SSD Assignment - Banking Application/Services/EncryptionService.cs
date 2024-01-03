@@ -29,17 +29,5 @@ namespace SSD_Assignment___Banking_Application.Services
             byte[] cipherBytes = Convert.FromBase64String(cipherText);
             return _cryptoManager.DecryptText(cipherBytes);
         }
-
-        public string[] EncryptVariables(params string[] variables)
-        {
-            // Encrypt each variable in the array using the same encryption logic
-            string[] encryptedVariables = new string[variables.Length];
-            for (int i = 0; i < variables.Length; i++)
-            {
-                encryptedVariables[i] = Encrypt(variables[i]);
-            }
-
-            return encryptedVariables;
-        }
     }
 }

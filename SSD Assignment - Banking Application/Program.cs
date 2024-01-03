@@ -21,9 +21,9 @@ namespace Banking_Application
             var serviceProvider = new ServiceCollection()
                 .AddSingleton<CryptoManager>()
                 .AddSingleton<ValidationService>()
-                .AddSingleton<Data_Access_Layer>() 
                 .AddSingleton<BankAccountService>()
                 .AddSingleton<IEncryptionService ,EncryptionService>()
+                .AddSingleton<Data_Access_Layer>()
                 .BuildServiceProvider();
 
             var bankAccountService = serviceProvider.GetService<BankAccountService>();
