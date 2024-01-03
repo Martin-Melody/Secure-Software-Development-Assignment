@@ -3,10 +3,10 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Linq;
 using System.Text;
-using Banking_Application;
 using System.Reflection;
+using SSD_Assignment___Banking_Application.Account_Types;
 
-namespace SSD_Assignment___Banking_Application
+namespace SSD_Assignment___Banking_Application.Encryption
 {
     public class CryptoManager
     {

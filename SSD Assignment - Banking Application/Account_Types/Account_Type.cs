@@ -9,7 +9,7 @@ using System.Threading.Tasks;
  * Student No: 
  */
 
-namespace Banking_Application
+namespace SSD_Assignment___Banking_Application.Account_Types
 {
     class Account_Type
     {

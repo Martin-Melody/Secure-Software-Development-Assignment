@@ -1,7 +1,7 @@
-﻿using Banking_Application;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic.FileIO;
-using SSD_Assignment___Banking_Application;
+using SSD_Assignment___Banking_Application.Data_Access;
+using SSD_Assignment___Banking_Application.Encryption;
 using SSD_Assignment___Banking_Application.Interfaces;
 using SSD_Assignment___Banking_Application.Services;
 using System;
@@ -39,6 +39,7 @@ namespace Banking_Application
                 Console.WriteLine("4. Make Lodgment");
                 Console.WriteLine("5. Make Withdrawal");
                 Console.WriteLine("6. Exit");
+                Console.WriteLine("7. Clear Screen");
                 Console.Write("Choose an option: ");
                 string option = Console.ReadLine();
 
@@ -72,6 +73,9 @@ namespace Banking_Application
                         break;
                     case "6":
                         running = false;
+                        break;
+                    case "7":
+                        Console.Clear();
                         break;
                     default:
                         Console.WriteLine("Invalid option chosen. Please try again.");

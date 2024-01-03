@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Banking_Application
+namespace SSD_Assignment___Banking_Application.Account_Types
 {
     public class Savings_Account : Bank_Account
     {
@@ -18,10 +18,10 @@ namespace Banking_Application
             set { _interestRate = value; }
         }
 
-        public Savings_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, string balance, string interestRate) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
+        public Savings_Account(string name, string address_line_1, string address_line_2, string address_line_3, string town, string balance, string interestRate) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
 
-            this.InterestRate = interestRate;
+            InterestRate = interestRate;
 
         }
 
@@ -29,7 +29,7 @@ namespace Banking_Application
         {
 
         }
-       
+
         public override double GetAvailableFunds()
         {
 
@@ -53,7 +53,7 @@ namespace Banking_Application
             return true;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
 
             return base.ToString() +

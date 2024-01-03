@@ -5,15 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Banking_Application
+namespace SSD_Assignment___Banking_Application.Account_Types
 {
     public class Current_Account : Bank_Account
     {
 
-        private String _overdraftAmount;
+        private string _overdraftAmount;
 
 
-        public String OverdraftAmount
+        public string OverdraftAmount
         {
             get { return _overdraftAmount; }
             set { _overdraftAmount = value; }
@@ -24,10 +24,10 @@ namespace Banking_Application
 
         }
 
-        public Current_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, String balance, String overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
+        public Current_Account(string name, string address_line_1, string address_line_2, string address_line_3, string town, string balance, string overdraftAmount) : base(name, address_line_1, address_line_2, address_line_3, town, balance)
         {
 
-            this.OverdraftAmount = overdraftAmount;
+            OverdraftAmount = overdraftAmount;
         }
 
         public override bool Withdraw(double amountToWithdraw)
@@ -57,7 +57,7 @@ namespace Banking_Application
             return balance + overdraftAmount;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
 
             return base.ToString() +

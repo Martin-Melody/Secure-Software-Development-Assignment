@@ -6,18 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Banking_Application
+namespace SSD_Assignment___Banking_Application.Account_Types
 {
     public abstract class Bank_Account
     {
 
-        private String _accountNo;
-        private String _name;
-        private String _balance;
-        private String _address_line_1;
-        private String _address_line_2;
-        private String _address_line_3;
-        private String _town;
+        private string _accountNo;
+        private string _name;
+        private string _balance;
+        private string _address_line_1;
+        private string _address_line_2;
+        private string _address_line_3;
+        private string _town;
 
 
 
@@ -25,16 +25,16 @@ namespace Banking_Application
         {
         }
 
-        public Bank_Account(String name, String address_line_1, String address_line_2, String address_line_3, String town, String balance)
+        public Bank_Account(string name, string address_line_1, string address_line_2, string address_line_3, string town, string balance)
         {
 
-            this.AccountNo = System.Guid.NewGuid().ToString();
-            this.Name = name;
-            this.AddressLine1 = address_line_1;
-            this.AddressLine2 = address_line_2;
-            this.AddressLine3 = address_line_3;
-            this.Town = town;
-            this.Balance = balance;
+            AccountNo = Guid.NewGuid().ToString();
+            Name = name;
+            AddressLine1 = address_line_1;
+            AddressLine2 = address_line_2;
+            AddressLine3 = address_line_3;
+            Town = town;
+            Balance = balance;
 
         }
 
@@ -96,7 +96,7 @@ namespace Banking_Application
 
         public abstract double GetAvailableFunds();
 
-        public String GetBalance()
+        public string GetBalance()
         {
             return Balance;
         }
@@ -106,7 +106,7 @@ namespace Banking_Application
             _balance = newBalance;
         }
 
-        public override String ToString()
+        public override string ToString()
         {
 
             return "\nAccount No: " + AccountNo + "\n" +

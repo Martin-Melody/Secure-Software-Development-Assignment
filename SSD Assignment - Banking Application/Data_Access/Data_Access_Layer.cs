@@ -7,9 +7,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using SSD_Assignment___Banking_Application;
+using SSD_Assignment___Banking_Application.Account_Types;
 using SSD_Assignment___Banking_Application.Interfaces;
 
-namespace Banking_Application
+namespace SSD_Assignment___Banking_Application.Data_Access
 {
     public class Data_Access_Layer
     {
@@ -21,7 +22,7 @@ namespace Banking_Application
         private static Data_Access_Layer instance;
 
 
-        public Data_Access_Layer(IEncryptionService encryptionService) 
+        public Data_Access_Layer(IEncryptionService encryptionService)
         {
             this.encryptionService = encryptionService;
             cngKeyManager.SetupCngProvider();
@@ -44,9 +45,9 @@ namespace Banking_Application
         private SqliteConnection getDatabaseConnection()
         {
 
-            String databaseConnectionString = new SqliteConnectionStringBuilder()
+            string databaseConnectionString = new SqliteConnectionStringBuilder()
             {
-                DataSource = Data_Access_Layer.databaseName,
+                DataSource = databaseName,
                 Mode = SqliteOpenMode.ReadWriteCreate
             }.ToString();
 
@@ -88,7 +89,7 @@ namespace Banking_Application
 
             // Replace this with check if database and tables exists method to remove one if else statement
 
-            if (!File.Exists(Data_Access_Layer.databaseName))
+            if (!File.Exists(databaseName))
                 initialiseDatabase();
             else
             {
@@ -177,10 +178,10 @@ namespace Banking_Application
                 command.Parameters.AddWithValue("@address_line_2", !string.IsNullOrEmpty(ba.AddressLine2) ? ba.AddressLine2 : DBNull.Value);
                 command.Parameters.AddWithValue("@address_line_3", !string.IsNullOrEmpty(ba.AddressLine3) ? ba.AddressLine3 : DBNull.Value);
                 command.Parameters.AddWithValue("@town", !string.IsNullOrEmpty(ba.Town) ? ba.Town : DBNull.Value);
-                command.Parameters.AddWithValue("@balance", ba.Balance); 
+                command.Parameters.AddWithValue("@balance", ba.Balance);
                 command.Parameters.AddWithValue("@accountType", accountType);
-                command.Parameters.AddWithValue("@overdraftAmount", ba is Current_Account ca && !string.IsNullOrEmpty(ca.OverdraftAmount) ? (object)ca.OverdraftAmount : DBNull.Value);
-                command.Parameters.AddWithValue("@interestRate", ba is Savings_Account sa && !string.IsNullOrEmpty(sa.InterestRate.ToString()) ? (object)sa.InterestRate : DBNull.Value);
+                command.Parameters.AddWithValue("@overdraftAmount", ba is Current_Account ca && !string.IsNullOrEmpty(ca.OverdraftAmount) ? ca.OverdraftAmount : DBNull.Value);
+                command.Parameters.AddWithValue("@interestRate", ba is Savings_Account sa && !string.IsNullOrEmpty(sa.InterestRate.ToString()) ? sa.InterestRate : DBNull.Value);
                 command.Parameters.AddWithValue("@creationDate", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 command.Parameters.AddWithValue("@hash", accountHash);
 
@@ -199,7 +200,7 @@ namespace Banking_Application
         }
 
 
-        public Bank_Account findBankAccountByAccNo(String accNo)
+        public Bank_Account findBankAccountByAccNo(string accNo)
         {
             try
             {
@@ -265,7 +266,7 @@ namespace Banking_Application
 
         private void SetAccountPropertiesFromReader(Bank_Account account, SqliteDataReader dr)
         {
-            account.AccountNo = dr.GetString(0); 
+            account.AccountNo = dr.GetString(0);
             account.Name = dr.GetString(1);
             account.AddressLine1 = dr.GetString(2);
             account.AddressLine2 = dr.GetString(3);
@@ -273,11 +274,11 @@ namespace Banking_Application
             account.Town = dr.GetString(5);
             account.Balance = dr.GetString(6);
 
-            if (account is Current_Account ca) 
+            if (account is Current_Account ca)
             {
                 ca.OverdraftAmount = dr.GetString(8);
             }
-            else if(account is Savings_Account sa)
+            else if (account is Savings_Account sa)
             {
                 sa.InterestRate = dr.GetString(9);
             }
@@ -285,7 +286,7 @@ namespace Banking_Application
 
 
 
-        public bool closeBankAccount(String accNo)
+        public bool closeBankAccount(string accNo)
         {
             Bank_Account toRemove = findBankAccountByAccNo(accNo);
 
@@ -321,7 +322,7 @@ namespace Banking_Application
             }
         }
 
-        public bool lodge(String accNo, double amountToLodge)
+        public bool lodge(string accNo, double amountToLodge)
         {
             var toLodgeTo = findBankAccountByAccNo(accNo);
 
@@ -348,7 +349,7 @@ namespace Banking_Application
         }
 
 
-        public bool withdraw(String accNo, double amountToWithdraw)
+        public bool withdraw(string accNo, double amountToWithdraw)
         {
             var toWithdrawFrom = findBankAccountByAccNo(accNo);
 
@@ -384,7 +385,7 @@ namespace Banking_Application
         {
             bool shouldInitialize = false;
 
-            if (!File.Exists(Data_Access_Layer.databaseName))
+            if (!File.Exists(databaseName))
             {
                 shouldInitialize = true;
             }

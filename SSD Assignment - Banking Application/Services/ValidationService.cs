@@ -64,7 +64,7 @@ namespace SSD_Assignment___Banking_Application.Services
         public bool IsValidMenuOption(string input)
         {
             // Assuming your menu options are numbers from 1 to 6
-            return int.TryParse(input, out int option) && option >= 1 && option <= 6;
+            return int.TryParse(input, out int option) && option >= 1 && option <= 7;
         }
 
         public bool IsValidName(string name)
