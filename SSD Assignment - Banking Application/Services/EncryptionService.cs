@@ -1,9 +1,11 @@
-﻿using SSD_Assignment___Banking_Application.Interfaces;
+﻿using Banking_Application;
+using SSD_Assignment___Banking_Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace SSD_Assignment___Banking_Application.Services
 {
@@ -28,6 +30,11 @@ namespace SSD_Assignment___Banking_Application.Services
             // Convert the cipher text from Base64 to a byte array and decrypt it
             byte[] cipherBytes = Convert.FromBase64String(cipherText);
             return _cryptoManager.DecryptText(cipherBytes);
+        }
+
+        public string CalculateRowHash(Bank_Account row)
+        {
+            return _cryptoManager.CalculateSHA256(row);
         }
     }
 }

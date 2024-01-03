@@ -2,6 +2,9 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Linq;
+using System.Text;
+using Banking_Application;
+using System.Reflection;
 
 namespace SSD_Assignment___Banking_Application
 {
@@ -89,5 +92,27 @@ namespace SSD_Assignment___Banking_Application
                 }
             }
         }
+
+        public string CalculateSHA256(Bank_Account account)
+        {
+            StringBuilder concatenatedProperties = new StringBuilder();
+
+            foreach (PropertyInfo property in account.GetType().GetProperties())
+            {
+                object value = property.GetValue(account, null);
+                if (value != null)
+                {
+                    concatenatedProperties.Append(value.ToString());
+                }
+            }
+
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(concatenatedProperties.ToString()));
+                return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            }
+        }
+
+
     }
 }
