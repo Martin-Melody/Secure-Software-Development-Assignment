@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Banking_Application;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,8 @@ namespace SSD_Assignment___Banking_Application.Interfaces
     {
         string Encrypt(string plainText);
         string Decrypt(string cipherText);
+
+        string CalculateRowHash(Bank_Account account);
 
     }
 

@@ -58,7 +58,7 @@ namespace Banking_Application
 
             return base.ToString() +
                 "Account Type: Savings Account\n" +
-                "Interest Rate: " + InterestRate + "\n";
+                "Interest Rate: " + InterestRate + "%\n";
 
         }
 
