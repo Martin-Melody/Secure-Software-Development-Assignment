@@ -11,8 +11,6 @@ namespace SSD_Assignment___Banking_Application.Interfaces
         string Encrypt(string plainText);
         string Decrypt(string cipherText);
 
-        public string[] EncryptVariables(params string[] variables);
-
     }
 
 }

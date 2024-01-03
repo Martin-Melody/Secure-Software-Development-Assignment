@@ -1,35 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace SSD_Assignment___Banking_Application
 {
-    using System;
-    using System.IO;
-    using System.Security.Cryptography;
-    using System.Text;
-
     public class CryptoManager
     {
-        private readonly byte[] _key;
-        private readonly byte[] _iv;
+        private CngKey _key;
+        private string _keyName = "eckey1";
 
         public CryptoManager()
         {
-            _key = GenerateKey();
-            _iv = GenerateIV();
+            _key = LoadOrCreateKey(_keyName);
         }
 
-        private static byte[] GenerateKey(int keySize = 32)
+        private static CngKey LoadOrCreateKey(string keyName)
         {
-            using (var rng = new RNGCryptoServiceProvider())
+            CngProvider provider = CngProvider.MicrosoftSoftwareKeyStorageProvider;
+            CngKeyCreationParameters keyCreationParameters = new CngKeyCreationParameters
             {
-                byte[] key = new byte[keySize];
-                rng.GetBytes(key);
-                return key;
+                Provider = provider,
+                ExportPolicy = CngExportPolicies.AllowPlaintextExport
+            };
+
+            if (!CngKey.Exists(keyName, provider))
+            {
+                return CngKey.Create(new CngAlgorithm("AES"), keyName, keyCreationParameters);
+            }
+            else
+            {
+                return CngKey.Open(keyName, provider);
             }
         }
 
@@ -43,16 +44,13 @@ namespace SSD_Assignment___Banking_Application
             }
         }
 
-
         public byte[] EncryptText(string plainText)
         {
-            using (Aes aesAlg = Aes.Create())
+            using (Aes aesAlg = new AesCng(_keyName))
             {
-                aesAlg.Key = _key;
-                aesAlg.IV = _iv;
+                aesAlg.IV = GenerateIV();
 
                 ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
-
                 using (var msEncrypt = new MemoryStream())
                 {
                     using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
@@ -61,21 +59,24 @@ namespace SSD_Assignment___Banking_Application
                         {
                             swEncrypt.Write(plainText);
                         }
-                        return msEncrypt.ToArray();
+                        byte[] encryptedData = msEncrypt.ToArray();
+                        byte[] combinedData = aesAlg.IV.Concat(encryptedData).ToArray();
+                        return combinedData;
                     }
                 }
             }
         }
 
-        public string DecryptText(byte[] cipherText)
+        public string DecryptText(byte[] combinedData)
         {
-            using (Aes aesAlg = Aes.Create())
+            byte[] iv = combinedData.Take(16).ToArray();
+            byte[] cipherText = combinedData.Skip(16).ToArray();
+
+            using (Aes aesAlg = new AesCng(_keyName))
             {
-                aesAlg.Key = _key;
-                aesAlg.IV = _iv;
+                aesAlg.IV = iv;
 
                 ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
-
                 using (var msDecrypt = new MemoryStream(cipherText))
                 {
                     using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
@@ -89,5 +90,4 @@ namespace SSD_Assignment___Banking_Application
             }
         }
     }
-
 }

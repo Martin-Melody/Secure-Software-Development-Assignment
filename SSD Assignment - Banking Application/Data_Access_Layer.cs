@@ -14,7 +14,6 @@ namespace Banking_Application
     {
         public static string databaseName = "Banking Database.sqlite";
 
-        private CryptoManager cryptoManager = new CryptoManager();
         private CngKeyManager cngKeyManager = new CngKeyManager();
 
         private readonly IEncryptionService encryptionService;
@@ -144,8 +143,7 @@ namespace Banking_Application
             Savings_Account savingsAccount = ba as Savings_Account;
 
             // Encrypt the account number
-            byte[] encryptedData = cryptoManager.EncryptText(ba.AccountNo);
-            string encryptedAccountNumber = Convert.ToBase64String(encryptedData);
+            string encryptedAccountNumber = encryptionService.Encrypt(ba.AccountNo);
 
             // Store the encrypted account number
             ba.AccountNo = encryptedAccountNumber;
