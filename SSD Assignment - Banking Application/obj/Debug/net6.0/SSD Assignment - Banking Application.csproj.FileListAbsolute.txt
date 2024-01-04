@@ -88,3 +88,6 @@ E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assign
 E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\obj\Debug\net6.0\SSD Assignment - Banking Application.pdb
 E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\obj\Debug\net6.0\SSD Assignment - Banking Application.genruntimeconfig.cache
 E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\obj\Debug\net6.0\ref\SSD Assignment - Banking Application.dll
+E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\bin\Debug\net6.0\System.Diagnostics.EventLog.dll
+E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.Messages.dll
+E:\College\Year 4\Secure Software Development\Secure-Software-Development-Assignment\SSD Assignment - Banking Application\bin\Debug\net6.0\runtimes\win\lib\net6.0\System.Diagnostics.EventLog.dll
