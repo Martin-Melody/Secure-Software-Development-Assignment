@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 /*
- * Student Name: 
- * Student No: 
+ * Student Name: Martin Melody  
+ * Student No: S00211628
  */
 
 namespace SSD_Assignment___Banking_Application.Account_Types

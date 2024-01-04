@@ -24,6 +24,7 @@ namespace Banking_Application
                 .AddSingleton<BankAccountService>()
                 .AddSingleton<IEncryptionService ,EncryptionService>()
                 .AddSingleton<Data_Access_Layer>()
+                .AddSingleton<EventLogService>()
                 .BuildServiceProvider();
 
             var bankAccountService = serviceProvider.GetService<BankAccountService>();

@@ -2,38 +2,43 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using SSD_Assignment___Banking_Application;
 using SSD_Assignment___Banking_Application.Account_Types;
+using SSD_Assignment___Banking_Application.Encryption;
 using SSD_Assignment___Banking_Application.Interfaces;
+using SSD_Assignment___Banking_Application.Services;
 
 namespace SSD_Assignment___Banking_Application.Data_Access
 {
     public class Data_Access_Layer
     {
         public static string databaseName = "Banking Database.sqlite";
+        private EventLogService _eventLogService;
 
-        private CngKeyManager cngKeyManager = new CngKeyManager();
+        private readonly CryptoManager _cryptoManager; 
 
         private readonly IEncryptionService encryptionService;
         private static Data_Access_Layer instance;
 
-
-        public Data_Access_Layer(IEncryptionService encryptionService)
+        // Adjusted constructor
+        public Data_Access_Layer(IEncryptionService encryptionService, EventLogService eventLogService, CryptoManager cryptoManager)
         {
             this.encryptionService = encryptionService;
-            cngKeyManager.SetupCngProvider();
+            this._eventLogService = eventLogService;
+            this._cryptoManager = cryptoManager; 
             EnsureDatabaseInitialized();
         }
 
-        public static void Initialize(IEncryptionService encryptionService)
+        public static void Initialize(IEncryptionService encryptionService, EventLogService eventLogService, CryptoManager cryptoManager)
         {
             if (instance == null)
             {
-                instance = new Data_Access_Layer(encryptionService);
+                instance = new Data_Access_Layer(encryptionService, eventLogService, cryptoManager);
             }
         }
 
@@ -50,6 +55,10 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                 DataSource = databaseName,
                 Mode = SqliteOpenMode.ReadWriteCreate
             }.ToString();
+
+            // if statement here 
+
+            _eventLogService.WriteToEventLog("Successfully connected to database", EventLogEntryType.Information, 1003);
 
             return new SqliteConnection(databaseConnectionString);
 
@@ -79,61 +88,15 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                     ) WITHOUT ROWID
                 ";
 
-                command.ExecuteNonQuery();
-
-            }
-        }
-
-        public void loadBankAccounts()
-        {
-
-            // Replace this with check if database and tables exists method to remove one if else statement
-
-            if (!File.Exists(databaseName))
-                initialiseDatabase();
-            else
-            {
-
-                using (var connection = getDatabaseConnection())
+                try
                 {
-                    connection.Open();
-                    var command = connection.CreateCommand();
-                    command.CommandText = "SELECT * FROM Bank_Accounts";
-                    SqliteDataReader dr = command.ExecuteReader();
+                    command.ExecuteNonQuery();
+                    _eventLogService.WriteToEventLog("Database Successfully Initialized", EventLogEntryType.Information, 1002);
 
-                    while (dr.Read())
-                    {
-
-                        int accountType = dr.GetInt16(7);
-
-                        if (accountType == Account_Type.Current_Account)
-                        {
-                            Current_Account ca = new Current_Account();
-                            ca.AccountNo = dr.GetString(0);
-                            ca.Name = dr.GetString(1);
-                            ca.AddressLine1 = dr.GetString(2);
-                            ca.AddressLine2 = dr.GetString(3);
-                            ca.AddressLine3 = dr.GetString(4);
-                            ca.Town = dr.GetString(5);
-                            ca.Balance = dr.GetString(6);
-                            ca.OverdraftAmount = dr.GetString(8);
-                        }
-                        else
-                        {
-                            Savings_Account sa = new Savings_Account();
-                            sa.AccountNo = dr.GetString(0);
-                            sa.Name = dr.GetString(1);
-                            sa.AddressLine1 = dr.GetString(2);
-                            sa.AddressLine2 = dr.GetString(3);
-                            sa.AddressLine3 = dr.GetString(4);
-                            sa.Town = dr.GetString(5);
-                            sa.Balance = dr.GetString(6);
-                            sa.InterestRate = dr.GetString(9);
-                        }
-
-
-                    }
-
+                }
+                catch
+                {
+                    _eventLogService.WriteToEventLog("Error creating database", EventLogEntryType.Error, 1015);
                 }
 
             }
@@ -188,10 +151,12 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                 try
                 {
                     command.ExecuteNonQuery();
+                    _eventLogService.WriteToEventLog("Account information added to database", EventLogEntryType.Information, 1004);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Error executing SQL command: " + ex.Message);
+                    _eventLogService.WriteToEventLog("Error adding account information to database", EventLogEntryType.Error, 1005);
                 }
             }
 
@@ -227,6 +192,7 @@ namespace SSD_Assignment___Banking_Application.Data_Access
 
                             if (calculatedHash != storedHash)
                             {
+                                _eventLogService.WriteToEventLog("Data integrity check failed: Hash mismatch", EventLogEntryType.Error, 1006);
                                 throw new Exception("Data integrity check failed: Hash mismatch.");
                             }
 
@@ -256,9 +222,11 @@ namespace SSD_Assignment___Banking_Application.Data_Access
             }
             catch (Exception ex)
             {
+                _eventLogService.WriteToEventLog($"Error verifying account integrity: {ex.Message}", EventLogEntryType.Error, 1007);
                 Console.WriteLine($"Error verifying account integrity: {ex.Message}");
                 return null;
             }
+            _eventLogService.WriteToEventLog("Error establishing connection with the database.", EventLogEntryType.Error, 1008);
             Console.WriteLine("Error establishing connection with the database.");
             return null;
         }
@@ -309,20 +277,22 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                     if (rowsAffected == 0)
                     {
                         Console.WriteLine("No account was deleted.");
-                        return false; // No rows affected, account not deleted
+                        return false; 
                     }
 
-                    return true; // Account successfully deleted
+                    _eventLogService.WriteToEventLog("Account Successfully Delete", EventLogEntryType.Information, 1009);
+                    return true; 
                 }
             }
             catch (Exception ex)
             {
+                _eventLogService.WriteToEventLog("Error closing account", EventLogEntryType.Error, 1010);
                 Console.WriteLine($"Error closing account: {ex.Message}");
-                return false; // Error occurred
+                return false; 
             }
         }
 
-        public bool lodge(string accNo, double amountToLodge)
+        public bool Lodge(string accNo, double amountToLodge)
         {
             var toLodgeTo = findBankAccountByAccNo(accNo);
 
@@ -341,7 +311,19 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                     command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
                     command.Parameters.AddWithValue("@balance", toLodgeTo.Balance);
                     command.Parameters.AddWithValue("@accountNo", toLodgeTo.AccountNo);
-                    command.ExecuteNonQuery();
+                    
+                    
+                    try 
+                    { 
+                        command.ExecuteNonQuery();
+                        _eventLogService.WriteToEventLog("Lodgment to account successful", EventLogEntryType.Information, 1011);
+                    } 
+                    catch 
+                    {
+                        _eventLogService.WriteToEventLog("Error adding lodgment to account", EventLogEntryType.Error, 1012);
+                        Console.WriteLine("There was an error adding the lodgment to your account");
+                    }
+
                 }
 
                 return true;
@@ -349,7 +331,7 @@ namespace SSD_Assignment___Banking_Application.Data_Access
         }
 
 
-        public bool withdraw(string accNo, double amountToWithdraw)
+        public bool Withdraw(string accNo, double amountToWithdraw)
         {
             var toWithdrawFrom = findBankAccountByAccNo(accNo);
 
@@ -373,7 +355,17 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                     command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
                     command.Parameters.AddWithValue("@balance", toWithdrawFrom.Balance);
                     command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.AccountNo);
-                    command.ExecuteNonQuery();
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                        _eventLogService.WriteToEventLog("Withdrawal from account successful", EventLogEntryType.Information, 1013);
+                    }
+                    catch
+                    {
+                        _eventLogService.WriteToEventLog("Error withdrawing from account", EventLogEntryType.Error, 1014);
+                        Console.WriteLine("There was an error withdrawing from your account");
+                    }
                 }
 
                 return true;

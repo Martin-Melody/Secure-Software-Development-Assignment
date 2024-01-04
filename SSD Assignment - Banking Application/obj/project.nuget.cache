@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "GG8QWETfrZvtnkpoLc9hBms7ZetinEgjZclj+uXBKYhF8O51l7YfhEksNju7jpTnrQjb0OaYKNNWeg/MVeUYsg==",
+  "dgSpecHash": "QIHAUWhnyoQi/vK7fNT312xUg17tG6ld1lc0rg1qNCCYC3/Bohpl94P46C9E/E998PrTEolpSY7adrLXbQ2O/Q==",
   "success": true,
   "projectFilePath": "E:\\College\\Year 4\\Secure Software Development\\Secure-Software-Development-Assignment\\SSD Assignment - Banking Application\\SSD Assignment - Banking Application.csproj",
   "expectedPackageFiles": [
@@ -12,6 +12,7 @@
     "C:\\Users\\marti\\.nuget\\packages\\sqlitepclraw.core\\2.1.2\\sqlitepclraw.core.2.1.2.nupkg.sha512",
     "C:\\Users\\marti\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.2\\sqlitepclraw.lib.e_sqlite3.2.1.2.nupkg.sha512",
     "C:\\Users\\marti\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.2\\sqlitepclraw.provider.e_sqlite3.2.1.2.nupkg.sha512",
+    "C:\\Users\\marti\\.nuget\\packages\\system.diagnostics.eventlog\\8.0.0\\system.diagnostics.eventlog.8.0.0.nupkg.sha512",
     "C:\\Users\\marti\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512"
   ],
   "logs": []

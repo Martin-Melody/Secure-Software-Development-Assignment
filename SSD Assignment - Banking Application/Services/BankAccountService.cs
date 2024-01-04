@@ -155,7 +155,7 @@ namespace SSD_Assignment___Banking_Application.Services
                 return;
             }
 
-            bool lodgementSuccessful = _dataAccessLayer.lodge(accNo, amount);
+            bool lodgementSuccessful = _dataAccessLayer.Lodge(accNo, amount);
             if (lodgementSuccessful)
             {
                 Console.WriteLine($"Amount {amount} lodged successfully to account {accNo}.");
@@ -200,7 +200,7 @@ namespace SSD_Assignment___Banking_Application.Services
                 return;
             }
 
-            bool withdrawalSuccessful = _dataAccessLayer.withdraw(accNo, amount);
+            bool withdrawalSuccessful = _dataAccessLayer.Withdraw(accNo, amount);
             if (withdrawalSuccessful)
             {
                 Console.WriteLine($"Amount {amount} withdrawn successfully from account {accNo}.");
