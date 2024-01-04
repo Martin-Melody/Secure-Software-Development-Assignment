@@ -165,7 +165,7 @@ namespace SSD_Assignment___Banking_Application.Data_Access
         }
 
 
-        public Bank_Account findBankAccountByAccNo(string accNo)
+        public Bank_Account findBankAccountByAccNo(string accNo, bool returnEncryptedData = false)
         {
             try
             {
@@ -180,39 +180,17 @@ namespace SSD_Assignment___Banking_Application.Data_Access
                     {
                         if (dr.Read())
                         {
-                            int accountType = dr.GetInt16(7);
-                            Bank_Account account = accountType == Account_Type.Current_Account ? new Current_Account() : new Savings_Account();
-
-                            // Set properties with encrypted values
-                            SetAccountPropertiesFromReader(account, dr);
-
-                            // Perform hash integrity check with encrypted values
+                            Bank_Account account = ExtractAccountData(dr);
                             string storedHash = dr.GetString(11);
-                            string calculatedHash = encryptionService.CalculateRowHash(account);
 
-                            if (calculatedHash != storedHash)
+                            if (!VerifyAccountIntegrity(account, storedHash))
                             {
-                                _eventLogService.WriteToEventLog("Data integrity check failed: Hash mismatch", EventLogEntryType.Error, 1006);
                                 throw new Exception("Data integrity check failed: Hash mismatch.");
                             }
 
-                            // Decrypt properties as needed after hash check
-                            account.Name = encryptionService.Decrypt(account.Name);
-                            account.AddressLine1 = encryptionService.Decrypt(account.AddressLine1);
-                            account.AddressLine2 = encryptionService.Decrypt(account.AddressLine2);
-                            account.AddressLine3 = encryptionService.Decrypt(account.AddressLine3);
-                            account.Town = encryptionService.Decrypt(account.Town);
-                            account.Balance = encryptionService.Decrypt(account.Balance);
-
-
-                            // Set type-specific properties (decrypt if necessary)
-                            if (account is Current_Account ca)
+                            if (!returnEncryptedData)
                             {
-                                ca.OverdraftAmount = dr.IsDBNull(8) ? null : encryptionService.Decrypt(dr.GetString(8));
-                            }
-                            else if (account is Savings_Account sa)
-                            {
-                                sa.InterestRate = dr.IsDBNull(9) ? null : encryptionService.Decrypt(dr.GetString(9));
+                                DecryptAccountProperties(account);
                             }
 
                             return account;
@@ -232,9 +210,25 @@ namespace SSD_Assignment___Banking_Application.Data_Access
         }
 
 
-        private void SetAccountPropertiesFromReader(Bank_Account account, SqliteDataReader dr)
+
+        private bool VerifyAccountIntegrity(Bank_Account account, string storedHash)
         {
-            account.AccountNo = dr.GetString(0);
+            string calculatedHash = encryptionService.CalculateRowHash(account);
+            if (calculatedHash != storedHash)
+            {
+                _eventLogService.WriteToEventLog("Data integrity check failed: Hash mismatch", EventLogEntryType.Error, 1006);
+                return false;
+            }
+            return true;
+        }
+
+        private Bank_Account ExtractAccountData(SqliteDataReader dr)
+        {
+            int accountType = dr.GetInt16(7);
+            Bank_Account account = accountType == Account_Type.Current_Account ? new Current_Account() : new Savings_Account();
+
+            // Populate account properties with encrypted data
+            account.AccountNo = dr.GetString(0); // Assuming AccountNo is not encrypted
             account.Name = dr.GetString(1);
             account.AddressLine1 = dr.GetString(2);
             account.AddressLine2 = dr.GetString(3);
@@ -244,17 +238,51 @@ namespace SSD_Assignment___Banking_Application.Data_Access
 
             if (account is Current_Account ca)
             {
-                ca.OverdraftAmount = dr.GetString(8);
+                ca.OverdraftAmount = dr.IsDBNull(8) ? null : dr.GetString(8);
             }
             else if (account is Savings_Account sa)
             {
-                sa.InterestRate = dr.GetString(9);
+                sa.InterestRate = dr.IsDBNull(9) ? null : dr.GetString(9);
+            }
+
+            return account;
+        }
+
+        private string DecryptBalance(Bank_Account account)
+        {
+            account.Balance = encryptionService.Decrypt(account.Balance);
+            return account.Balance;
+        }
+
+        private void EncryptBalance(Bank_Account account)
+        {
+            account.Balance = encryptionService.Encrypt(account.Balance);
+        }
+
+        private void DecryptAccountProperties(Bank_Account account)
+        {
+            // Decrypt properties
+            account.Name = encryptionService.Decrypt(account.Name);
+            account.AddressLine1 = encryptionService.Decrypt(account.AddressLine1);
+            account.AddressLine2 = encryptionService.Decrypt(account.AddressLine2);
+            account.AddressLine3 = encryptionService.Decrypt(account.AddressLine3);
+            account.Town = encryptionService.Decrypt(account.Town);
+            account.Balance = encryptionService.Decrypt(account.Balance);
+
+            if (account is Current_Account ca)
+            {
+                ca.OverdraftAmount = ca.OverdraftAmount != null ? encryptionService.Decrypt(ca.OverdraftAmount) : null;
+            }
+            else if (account is Savings_Account sa)
+            {
+                sa.InterestRate = sa.InterestRate != null ? encryptionService.Decrypt(sa.InterestRate) : null;
             }
         }
 
 
 
-        public bool closeBankAccount(string accNo)
+
+        public bool CloseBankAccount(string accNo)
         {
             Bank_Account toRemove = findBankAccountByAccNo(accNo);
 
@@ -294,7 +322,8 @@ namespace SSD_Assignment___Banking_Application.Data_Access
 
         public bool Lodge(string accNo, double amountToLodge)
         {
-            var toLodgeTo = findBankAccountByAccNo(accNo);
+            var toLodgeTo = findBankAccountByAccNo(accNo, true);
+            toLodgeTo.Balance = DecryptBalance(toLodgeTo);
 
             if (toLodgeTo == null)
             {
@@ -303,37 +332,56 @@ namespace SSD_Assignment___Banking_Application.Data_Access
             else
             {
                 toLodgeTo.Lodge(amountToLodge);
+                EncryptBalance(toLodgeTo);
 
                 using (var connection = getDatabaseConnection())
                 {
                     connection.Open();
-                    var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
-                    command.Parameters.AddWithValue("@balance", toLodgeTo.Balance);
-                    command.Parameters.AddWithValue("@accountNo", toLodgeTo.AccountNo);
-                    
-                    
-                    try 
-                    { 
-                        command.ExecuteNonQuery();
-                        _eventLogService.WriteToEventLog("Lodgment to account successful", EventLogEntryType.Information, 1011);
-                    } 
-                    catch 
+
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        _eventLogService.WriteToEventLog("Error adding lodgment to account", EventLogEntryType.Error, 1012);
-                        Console.WriteLine("There was an error adding the lodgment to your account");
+                        var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+
+                        try
+                        {
+                            command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                            command.Parameters.AddWithValue("@balance", toLodgeTo.Balance); // Assume this is the new balance
+                            command.Parameters.AddWithValue("@accountNo", toLodgeTo.AccountNo);
+                            command.ExecuteNonQuery();
+
+                            string newHash = encryptionService.CalculateRowHash(toLodgeTo);
+
+                            command.CommandText = "UPDATE Bank_Accounts SET hash = @hash WHERE accountNo = @accountNo";
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@hash", newHash);
+                            command.Parameters.AddWithValue("@accountNo", toLodgeTo.AccountNo);
+                            command.ExecuteNonQuery();
+
+                            transaction.Commit();
+                            _eventLogService.WriteToEventLog("Lodgment to account successful", EventLogEntryType.Information, 1011);
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            _eventLogService.WriteToEventLog("Error adding lodgment to account: " + ex.Message, EventLogEntryType.Error, 1012);
+                            Console.WriteLine("There was an error adding the lodgment to your account: " + ex.Message);
+                            return false;
+                        }
                     }
-
                 }
-
-                return true;
             }
         }
 
 
+
+
         public bool Withdraw(string accNo, double amountToWithdraw)
         {
-            var toWithdrawFrom = findBankAccountByAccNo(accNo);
+            var toWithdrawFrom = findBankAccountByAccNo(accNo, true);
+            toWithdrawFrom.Balance = DecryptBalance(toWithdrawFrom);
+
 
             if (toWithdrawFrom == null)
             {
@@ -341,36 +389,56 @@ namespace SSD_Assignment___Banking_Application.Data_Access
             }
             else
             {
-                bool result = toWithdrawFrom.Withdraw(amountToWithdraw);
-
-                if (!result)
-                {
-                    return false;
-                }
+                toWithdrawFrom.Withdraw(amountToWithdraw);
+                EncryptBalance(toWithdrawFrom);
+               
 
                 using (var connection = getDatabaseConnection())
                 {
                     connection.Open();
-                    var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
-                    command.Parameters.AddWithValue("@balance", toWithdrawFrom.Balance);
-                    command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.AccountNo);
 
-                    try
+                    // Start a transaction
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        command.ExecuteNonQuery();
-                        _eventLogService.WriteToEventLog("Withdrawal from account successful", EventLogEntryType.Information, 1013);
-                    }
-                    catch
-                    {
-                        _eventLogService.WriteToEventLog("Error withdrawing from account", EventLogEntryType.Error, 1014);
-                        Console.WriteLine("There was an error withdrawing from your account");
+                        var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+
+                        try
+                        {
+                            // Update the balance
+                            command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                            command.Parameters.AddWithValue("@balance", toWithdrawFrom.Balance);
+                            command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.AccountNo);
+                            command.ExecuteNonQuery();
+
+                            // Recalculate the hash
+                            string newHash = encryptionService.CalculateRowHash(toWithdrawFrom);
+
+                            // Update the hash
+                            command.CommandText = "UPDATE Bank_Accounts SET hash = @hash WHERE accountNo = @accountNo";
+                            command.Parameters.Clear();
+                            command.Parameters.AddWithValue("@hash", newHash);
+                            command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.AccountNo);
+                            command.ExecuteNonQuery();
+
+                            // Commit the transaction
+                            transaction.Commit();
+                            _eventLogService.WriteToEventLog("Withdrawal from account successful", EventLogEntryType.Information, 1013);
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            // Roll back the transaction in case of an error
+                            transaction.Rollback();
+                            _eventLogService.WriteToEventLog("Error withdrawing from account: " + ex.Message, EventLogEntryType.Error, 1014);
+                            Console.WriteLine("There was an error withdrawing from your account: " + ex.Message);
+                            return false;
+                        }
                     }
                 }
-
-                return true;
             }
         }
+
 
 
         private void EnsureDatabaseInitialized()
