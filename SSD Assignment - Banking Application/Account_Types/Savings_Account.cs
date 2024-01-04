@@ -37,21 +37,7 @@ namespace SSD_Assignment___Banking_Application.Account_Types
             return balance;
         }
 
-        public override bool Withdraw(double amountToWithdraw)
-        {
-            //double avFunds = GetBalance();
-
-            //if (avFunds >= amountToWithdraw)
-            //{
-            //    UpdateBalance(Balance - amountToWithdraw); // Use the protected method
-            //    return true;
-            //}
-            //else
-            //{
-            //    return false;
-            //}
-            return true;
-        }
+       
 
         public override string ToString()
         {

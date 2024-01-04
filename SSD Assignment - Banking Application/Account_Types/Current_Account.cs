@@ -30,22 +30,7 @@ namespace SSD_Assignment___Banking_Application.Account_Types
             OverdraftAmount = overdraftAmount;
         }
 
-        public override bool Withdraw(double amountToWithdraw)
-        {
-            //string avFunds = GetBalance();
-
-            //if (avFunds >= amountToWithdraw)
-            //{
-            //    UpdateBalance(Balance - amountToWithdraw); // Use the protected method
-            //    return true;
-            //}
-            //else
-            //{
-            //    return false;
-            //}
-
-            return true;
-        }
+       
 
         public override double GetAvailableFunds()
         {

@@ -99,7 +99,7 @@ namespace SSD_Assignment___Banking_Application.Services
             Console.WriteLine(bankAccount.ToString());
             if (ConfirmAction("Proceed With Deletion (Y/N)?"))
             {
-                _dataAccessLayer.closeBankAccount(accNo);
+                _dataAccessLayer.CloseBankAccount(accNo);
                 Console.WriteLine("Account closed successfully.");
             }
         }

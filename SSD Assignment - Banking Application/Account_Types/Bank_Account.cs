@@ -89,10 +89,29 @@ namespace SSD_Assignment___Banking_Application.Account_Types
             {
                 throw new ArgumentException("Amount to lodge must be positive");
             }
-            Balance += amountIn;
+
+            double.TryParse(Balance, out double _balance);
+            _balance += amountIn;
+
+            Balance = _balance.ToString() ;
         }
 
-        public abstract bool Withdraw(double amountToWithdraw);
+        public void Withdraw(double amountToWithdraw)
+        {
+            double.TryParse(Balance, out double _balance);
+            if (amountToWithdraw <= 0 )
+            {
+                throw new ArgumentException("Amount to Withdraw must be more than 0 ");
+            }
+            else if (amountToWithdraw > _balance)
+            {
+                throw new ArgumentException("Amount to Withdraw must be less that your balance");
+            }
+
+            _balance -= amountToWithdraw;
+
+            Balance = _balance.ToString() ;
+        }
 
         public abstract double GetAvailableFunds();
 
